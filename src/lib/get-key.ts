@@ -8,7 +8,6 @@ export default (url: string): string | null => {
     const tmp = _.split(origin, '/');
     const site = tmp[0];
     const path = _.join(_.slice(tmp, 1), '/');
-    1;
 
     const transform = _.trimEnd(
       decoded.substring(decoded.lastIndexOf('/image/fetch/') + _.size('/image/fetch/'), decoded.lastIndexOf('http')),
