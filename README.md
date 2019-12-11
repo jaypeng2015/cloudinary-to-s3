@@ -1,3 +1,3 @@
 # Cloudinary to S3
 
-Move uploaded or fetched images from Cloudinary to an existing AWS s3 bucket
+Download uploaded or fetched images from Cloudinary and then upload to an existing AWS s3 bucket.
