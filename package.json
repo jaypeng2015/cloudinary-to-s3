@@ -1,0 +1,58 @@
+{
+  "name": "cloudinary-to-s3",
+  "version": "1.0.0",
+  "description": "Move \"fetch\" assets from cloudinary to an existing AWS s3 bucket",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jaypeng2015/cloudinary-to-s3.git"
+  },
+  "author": "Jingwei Peng",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jaypeng2015/cloudinary-to-s3/issues"
+  },
+  "homepage": "https://github.com/jaypeng2015/cloudinary-to-s3#readme",
+  "devDependencies": {
+    "@commitlint/cli": "8.2.0",
+    "@commitlint/config-conventional": "8.2.0",
+    "@types/aws-lambda": "8.10.37",
+    "@types/jest": "24.0.23",
+    "@types/lodash": "4.14.149",
+    "@types/node": "12.12.17",
+    "husky": "3.1.0",
+    "jest": "24.9.0",
+    "lint-staged": "9.5.0",
+    "serverless": "1.59.3",
+    "serverless-pseudo-parameters": "2.5.0",
+    "serverless-step-functions": "2.12.0",
+    "serverless-webpack": "5.3.1",
+    "source-map-support": "0.5.16",
+    "timekeeper": "2.2.0",
+    "ts-jest": "24.2.0",
+    "ts-loader": "6.2.1",
+    "tslint": "5.20.1",
+    "tslint-config-prettier": "1.18.0",
+    "typescript": "3.7.3",
+    "webpack": "4.41.2",
+    "webpack-node-externals": "1.7.2"
+  },
+  "dependencies": {
+    "aws-sdk": "2.536.0",
+    "axios": "0.19.0",
+    "lodash": "4.17.15"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js"
+    ],
+    "transform": {
+      "\\.(ts|tsx)$": "ts-jest"
+    },
+    "testRegex": ".*test\\.(ts|tsx|js)$"
+  }
+}

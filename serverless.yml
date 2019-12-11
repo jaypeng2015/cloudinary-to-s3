@@ -1,0 +1,121 @@
+# serverless.yml
+
+service:
+  name: cloudinary-to-s3
+
+frameworkVersion: '>=1.0.0 <2.0.0'
+
+plugins:
+  - serverless-pseudo-parameters
+  - serverless-webpack
+  - serverless-step-functions
+
+package:
+  # https://github.com/serverless-heaven/serverless-webpack/issues/299
+  individually: false
+
+custom:
+  webpack:
+    includeModules:
+      forceExclude:
+        - aws-sdk
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: ${opt:stage, 'dev'} # Set the default stage used. Default is dev
+  region: ap-southeast-2 # Overwrite the default region used. Default is us-east-1
+  memorySize: 1536 # Overwrite the default memory size. Default is 1024
+  timeout: 6 # The default is 6
+  versionFunctions: false
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:putObject
+      Resource:
+        - arn:aws:s3:::${env:S3_BUCKET_NAME}/*
+    - Effect: 'Allow'
+      Action:
+        - 'sqs:sendMessage'
+        - 'sqs:ReceiveMessage'
+        - 'sqs:DeleteMessage'
+        - 'sqs:GetQueueAttributes'
+      Resource:
+        - Fn::GetAtt:
+            - 'ResourceUploadQueue'
+            - 'Arn'
+
+functions:
+  getResources:
+    handler: src/get.handler
+    environment:
+      CLOUDINARY_API_KEY: ${env:CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${env:CLOUDINARY_API_SECRET}
+      CLOUDINARY_CLOUD_ID: ${env:CLOUDINARY_CLOUD_ID}
+      QUEUE:
+        Ref: ResourceUploadQueue
+  upload:
+    handler: src/upload.handler
+    timeout: 180 # 3 mins to accommodate file sizes
+    environment:
+      S3_BUCKET_NAME: ${env:S3_BUCKET_NAME}
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - 'ResourceUploadQueue'
+              - 'Arn'
+          batchSize: 1 # Set to 1 to limit memory
+
+stepFunctions:
+  stateMachines:
+    CloudinaryStorageMigration:
+      name: CloudinaryStorageMigration
+      definition:
+        StartAt: GetResources
+        States:
+          GetResources:
+            Type: Task
+            Resource: arn:aws:lambda:${opt:region}:#{AWS::AccountId}:function:${self:service}-${opt:stage, self:provider.stage}-getResources
+            Next: ChoiceState
+            Retry:
+              - ErrorEquals:
+                  - Lambda.ServiceException
+                  - Lambda.SdkClientException
+                  - Lambda.Unknown
+                IntervalSeconds: 2
+                MaxAttempts: 6
+                BackoffRate: 2
+          ChoiceState:
+            Type: Choice
+            Choices:
+              - Variable: '$.hasNext'
+                BooleanEquals: true
+                Next: Wait1Second
+            Default: Done
+          Wait1Second:
+            Type: Wait
+            Seconds: 1
+            Next: GetResources
+          Done:
+            Type: Succeed
+
+resources:
+  Resources:
+    ResourceUploadQueue:
+      DependsOn:
+        - ResourceUploadDeadLetterQueue
+      Type: AWS::SQS::Queue
+      Properties:
+        VisibilityTimeout: 300 # The extra time allows for Lambda to retry if the function execution is throttled
+        MessageRetentionPeriod: 604800
+        RedrivePolicy:
+          deadLetterTargetArn:
+            Fn::GetAtt:
+              - 'ResourceUploadDeadLetterQueue'
+              - 'Arn'
+          maxReceiveCount: 5 # This will help avoid sending messages to the dead-letter queue due to throttling.
+    ResourceUploadDeadLetterQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        MessageRetentionPeriod: 1209600
