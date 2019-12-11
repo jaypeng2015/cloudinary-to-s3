@@ -25,6 +25,11 @@ test('should get s3 file key', () => {
       input: 'https://res.cloudinary.com/dhn6iym7c/image/upload/v1538440259/digital-passport/tourism/sealife-logo.png',
       expect: 'upload/v1538440259/digital-passport/tourism/sealife-logo.png',
     },
+    {
+      input:
+        'https://res.cloudinary.com/dhn6iym7c/something-else/v1538440259/digital-passport/tourism/sealife-logo.png',
+      expect: null,
+    },
   ];
   _.forEach(urls, ({ input, expect }) => {
     assert(_.eq(getKey(input), expect));
