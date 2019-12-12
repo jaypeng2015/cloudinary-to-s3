@@ -7,8 +7,8 @@
     "preserveConstEnums": true,
     "sourceMap": true,
     "strictNullChecks": true,
-    "target": "es2019"
+    "target": "es2019",
+    "plugins": [{"name": "typescript-tslint-plugin"}]
   },
-  "exclude": ["node_modules", "webpack", "**/*.test.ts"],
-  "types": ["typePatches"]
+  "exclude": ["node_modules", "webpack", "**/*.test.ts"]
 }

@@ -17,12 +17,12 @@ interface FetchResult {
 
 // const maxAttempt = Number.MAX_SAFE_INTEGER;
 const maxAttempt = 3;
-const max_results = 500;
+const MAX_RESULTS = 500;
 const sqs = new AWS.SQS({ apiVersion: '2012-11-05' });
 const url = `https://${process.env.CLOUDINARY_API_KEY}:${process.env.CLOUDINARY_API_SECRET}@api.cloudinary.com/v1_1/${process.env.CLOUDINARY_CLOUD_ID}/resources/image`;
 
 const fetchList = async (nextCursor: string | null): Promise<FetchResult> => {
-  const params = nextCursor ? { max_results, next_cursor: nextCursor } : { max_results: 500 };
+  const params = nextCursor ? { max_results: MAX_RESULTS, next_cursor: nextCursor } : { max_results: MAX_RESULTS };
   const {
     data: { resources, next_cursor: newNextCursor },
   } = await axios.get(url, { params });
@@ -45,14 +45,14 @@ const handler = async ({
   nextCursor = null,
   sqsMessageSent = 0,
 }: State): Promise<State> => {
-  let { moved, nextCursor: next } = await fetchList(nextCursor);
+  const { moved, nextCursor: next } = await fetchList(nextCursor);
 
   if (_.isNull(next)) {
     return {
       attempt: attempt + 1,
       hasNext: false,
-      nextCursor: next,
       imageMoved: imageMoved + moved,
+      nextCursor: next,
       sqsMessageSent: sqsMessageSent + 1,
     };
   }
@@ -60,12 +60,12 @@ const handler = async ({
   // The default api rate limit is 5000 per day.
   // However it is possible to ask Cloudinary support to bump the limit to 10,000 per hour
   // Because we put 1s wait in step functions to control the rate limit, so here we do it again to make 7,200 requests per hour
-  let { moved: movedAgain, nextCursor: newCursor } = await fetchList(next);
+  const { moved: movedAgain, nextCursor: newCursor } = await fetchList(next);
   return {
     attempt: attempt + 1,
     hasNext: attempt + 1 === maxAttempt ? false : !!newCursor,
-    nextCursor: newCursor,
     imageMoved: imageMoved + moved + movedAgain,
+    nextCursor: newCursor,
     sqsMessageSent: sqsMessageSent + 2,
   };
 };

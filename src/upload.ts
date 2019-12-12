@@ -17,13 +17,13 @@ const handler = async ({ Records: [record] }) => {
   console.log(`Handling ${_.size(urls)} images`);
 
   const promises = _.map(urls, async url => {
-    const body = await getBase64(url);
+    const base64 = await getBase64(url);
     const key = getKey(url);
     if (key) {
       await s3
         .upload({
+          Body: base64,
           Bucket: process.env.S3_BUCKET_NAME || '',
-          Body: body,
           Key: key,
         })
         .promise();

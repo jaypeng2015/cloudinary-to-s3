@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Move \"fetch\" assets from cloudinary to an existing AWS s3 bucket",
   "scripts": {
+    "lint": "tslint -c tslint.json 'src/**/*.ts'",
     "test": "jest"
   },
   "repository": {
