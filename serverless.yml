@@ -6,6 +6,7 @@ service:
 frameworkVersion: '>=1.0.0 <2.0.0'
 
 plugins:
+  - serverless-dotenv-plugin
   - serverless-pseudo-parameters
   - serverless-webpack
   - serverless-step-functions

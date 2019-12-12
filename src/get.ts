@@ -16,7 +16,7 @@ interface FetchResult {
 }
 
 // const maxAttempt = Number.MAX_SAFE_INTEGER;
-const maxAttempt = 3;
+const maxAttempt = 30;
 const MAX_RESULTS = 500;
 const sqs = new AWS.SQS({ apiVersion: '2012-11-05' });
 const url = `https://${process.env.CLOUDINARY_API_KEY}:${process.env.CLOUDINARY_API_SECRET}@api.cloudinary.com/v1_1/${process.env.CLOUDINARY_CLOUD_ID}/resources/image`;
