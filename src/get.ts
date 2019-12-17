@@ -3,11 +3,12 @@ import axios from 'axios';
 import AWS from 'aws-sdk';
 
 interface State {
+  attempt: number;
   hasNext?: boolean;
   imageMoved?: number;
+  limitReached: boolean;
   nextCursor: string | null;
   sqsMessageSent?: number;
-  attempt: number;
 }
 
 interface FetchResult {
@@ -15,8 +16,9 @@ interface FetchResult {
   nextCursor: string | null;
 }
 
-// const maxAttempt = Number.MAX_SAFE_INTEGER;
-const maxAttempt = 30;
+const LIMIT = 1000;
+const maxAttempt = Number.MAX_SAFE_INTEGER;
+// const maxAttempt = 30;
 const MAX_RESULTS = 500;
 const sqs = new AWS.SQS({ apiVersion: '2012-11-05' });
 const url = `https://${process.env.CLOUDINARY_API_KEY}:${process.env.CLOUDINARY_API_SECRET}@api.cloudinary.com/v1_1/${process.env.CLOUDINARY_CLOUD_ID}/resources/image`;
@@ -52,6 +54,7 @@ const handler = async ({
       attempt: attempt + 1,
       hasNext: false,
       imageMoved: imageMoved + moved,
+      limitReached: attempt + 1 === LIMIT,
       nextCursor: next,
       sqsMessageSent: sqsMessageSent + 1,
     };
@@ -65,6 +68,7 @@ const handler = async ({
     attempt: attempt + 1,
     hasNext: attempt + 1 === maxAttempt ? false : !!newCursor,
     imageMoved: imageMoved + moved + movedAgain,
+    limitReached: attempt + 1 === LIMIT,
     nextCursor: newCursor,
     sqsMessageSent: sqsMessageSent + 2,
   };

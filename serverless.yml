@@ -45,6 +45,10 @@ provider:
         - Fn::GetAtt:
             - 'ResourceUploadQueue'
             - 'Arn'
+    - Effect: Allow
+      Action:
+        - states:StartExecution
+      Resource: ${self:resources.Outputs.MyStateMachine.Value}
 
 functions:
   getResources:
@@ -67,6 +71,10 @@ functions:
               - 'ResourceUploadQueue'
               - 'Arn'
           batchSize: 1 # Set to 1 to limit memory
+  start:
+    handler: src/start.handler
+    environment:
+      STATE_MACHINE_ARN: ${self:resources.Outputs.MyStateMachine.Value}
 
 stepFunctions:
   stateMachines:
@@ -78,7 +86,7 @@ stepFunctions:
           GetResources:
             Type: Task
             Resource: arn:aws:lambda:${opt:region}:#{AWS::AccountId}:function:${self:service}-${opt:stage, self:provider.stage}-getResources
-            Next: ChoiceState
+            Next: HasNext
             Retry:
               - ErrorEquals:
                   - Lambda.ServiceException
@@ -87,7 +95,7 @@ stepFunctions:
                 IntervalSeconds: 2
                 MaxAttempts: 6
                 BackoffRate: 2
-          ChoiceState:
+          HasNext:
             Type: Choice
             Choices:
               - Variable: '$.hasNext'
@@ -97,7 +105,26 @@ stepFunctions:
           Wait1Second:
             Type: Wait
             Seconds: 1
-            Next: GetResources
+            Next: LimitReached
+          LimitReached:
+            Type: Choice
+            Choices:
+              - Variable: '$.limitReached'
+                BooleanEquals: true
+                Next: StartNewExecution
+            Default: GetResources
+          StartNewExecution:
+            Type: Task
+            Resource: arn:aws:lambda:${opt:region}:#{AWS::AccountId}:function:${self:service}-${opt:stage, self:provider.stage}-start
+            Next: Done
+            Retry:
+              - ErrorEquals:
+                  - Lambda.ServiceException
+                  - Lambda.SdkClientException
+                  - Lambda.Unknown
+                IntervalSeconds: 2
+                MaxAttempts: 6
+                BackoffRate: 2
           Done:
             Type: Succeed
 
@@ -120,3 +147,8 @@ resources:
       Type: AWS::SQS::Queue
       Properties:
         MessageRetentionPeriod: 1209600
+  Outputs:
+    MyStateMachine:
+      Description: The ARN of the example state machine
+      Value:
+        Ref: CloudinaryStorageMigration
