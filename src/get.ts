@@ -17,8 +17,6 @@ interface FetchResult {
 }
 
 const LIMIT = 1000;
-const maxAttempt = Number.MAX_SAFE_INTEGER;
-// const maxAttempt = 30;
 const MAX_RESULTS = 500;
 const sqs = new AWS.SQS({ apiVersion: '2012-11-05' });
 const url = `https://${process.env.CLOUDINARY_API_KEY}:${process.env.CLOUDINARY_API_SECRET}@api.cloudinary.com/v1_1/${process.env.CLOUDINARY_CLOUD_ID}/resources/image`;
@@ -66,7 +64,7 @@ const handler = async ({
   const { moved: movedAgain, nextCursor: newCursor } = await fetchList(next);
   return {
     attempt: attempt + 1,
-    hasNext: attempt + 1 === maxAttempt ? false : !!newCursor,
+    hasNext: !!newCursor,
     imageMoved: imageMoved + moved + movedAgain,
     limitReached: attempt + 1 === LIMIT,
     nextCursor: newCursor,
