@@ -6,9 +6,17 @@ import getKey from './lib/get-key';
 
 const s3 = new AWS.S3({ apiVersion: '2006-03-01' });
 
-const getBase64 = async (url: string): Promise<string> => {
-  const { data } = await axios.get(url, { responseType: 'arraybuffer' });
-  return Buffer.from(data, 'binary').toString('base64');
+interface Image {
+  contentType: string;
+  data: Buffer;
+}
+
+const getImage = async (url: string): Promise<Image> => {
+  const { data, headers } = await axios.get(url, { responseType: 'arraybuffer' });
+  return {
+    contentType: headers['content-type'],
+    data: Buffer.from(data, 'binary'),
+  };
 };
 
 const handler = async ({ Records: [record] }) => {
@@ -17,13 +25,14 @@ const handler = async ({ Records: [record] }) => {
   console.log(`Handling ${_.size(urls)} images`);
 
   const promises = _.map(urls, async url => {
-    const base64 = await getBase64(url);
+    const image = await getImage(url);
     const key = getKey(url);
     if (key) {
       await s3
         .upload({
-          Body: base64,
-          Bucket: process.env.S3_BUCKET_NAME || '',
+          Body: image.data,
+          Bucket: process.env.S3_BUCKET_NAME!,
+          ContentType: image.contentType,
           Key: key,
         })
         .promise();
