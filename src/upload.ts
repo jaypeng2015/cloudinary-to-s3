@@ -14,12 +14,26 @@ interface Image {
   data: Buffer;
 }
 
+interface MetaData {
+  error?: Error;
+  item: any;
+  succeeded: Boolean;
+}
+
 const getImage = async (url: string): Promise<Image> => {
   const { data, headers } = await axios.get(url, { responseType: 'arraybuffer' });
   return {
     contentType: headers['content-type'],
     data: Buffer.from(data, 'binary'),
   };
+};
+
+const createMetaData = async ({ item, succeeded, error }: MetaData) => {
+  if (succeeded) {
+    await db.put({ TableName: META_DATA_TABLE, Item: item }).promise();
+  } else {
+    await db.put({ TableName: FAILED_RECORDS_TABLE_NAME, Item: { ...item, error: _.get(error, 'message') } }).promise();
+  }
 };
 
 const handler = async ({ Records: [record] }) => {
@@ -44,40 +58,13 @@ const handler = async ({ Records: [record] }) => {
             Key: key,
           })
           .promise();
-        await db
-          .put({
-            TableName: META_DATA_TABLE,
-            Item: { ...item, succeed: true },
-          })
-          .promise();
+        await createMetaData({ item, succeeded: true });
       } else {
         console.log('Unable to handle file', url);
-        await db
-          .put({
-            TableName: META_DATA_TABLE,
-            Item: { ...item, succeed: false },
-          })
-          .promise();
-        await db
-          .put({
-            TableName: FAILED_RECORDS_TABLE_NAME,
-            Item: { ...item, reason: 'Could not generate file key for this url' },
-          })
-          .promise();
+        await createMetaData({ item, succeeded: false, error: new Error('Could not generate file key for this url') });
       }
     } catch (error) {
-      await db
-        .put({
-          TableName: META_DATA_TABLE,
-          Item: { ...item, succeed: false, reason: _.get(error, 'message') },
-        })
-        .promise();
-      await db
-        .put({
-          TableName: FAILED_RECORDS_TABLE_NAME,
-          Item: { ...item, reason: _.get(error, 'message') },
-        })
-        .promise();
+      await createMetaData({ item, succeeded: false, error });
     }
   });
 
