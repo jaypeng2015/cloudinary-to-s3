@@ -49,6 +49,11 @@ provider:
       Action:
         - states:StartExecution
       Resource: ${self:resources.Outputs.MyStateMachine.Value}
+    - Effect: Allow #allow lambda to read from the event stream
+      Action:
+        - dynamodb:PutItem
+      Resource:
+        - ${self:resources.Outputs.DynamoDBTableArn.Value}
 
 functions:
   getResources:
@@ -64,6 +69,7 @@ functions:
     timeout: 180 # 3 mins to accommodate file sizes
     environment:
       S3_BUCKET_NAME: ${env:S3_BUCKET_NAME}
+      META_DATA_TABLE: ${self:resources.Outputs.DynamoDBTableArn.Value}
     events:
       - sqs:
           arn:
@@ -147,8 +153,37 @@ resources:
       Type: AWS::SQS::Queue
       Properties:
         MessageRetentionPeriod: 1209600
+    MetaDataTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${env:META_DATA_TABLE_NAME}
+        AttributeDefinitions:
+          - AttributeName: cloudinary_url
+            AttributeType: S
+        KeySchema:
+          - AttributeName: cloudinary_url
+            KeyType: HASH
+        SSESpecification:
+          SSEEnabled: false
+        BillingMode: PAY_PER_REQUEST
+    FailedRecordsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${env:FAILED_RECORDS_TABLE_NAME}
+        AttributeDefinitions:
+          - AttributeName: cloudinary_url
+            AttributeType: S
+        KeySchema:
+          - AttributeName: cloudinary_url
+            KeyType: HASH
+        SSESpecification:
+          SSEEnabled: false
+        BillingMode: PAY_PER_REQUEST
   Outputs:
     MyStateMachine:
       Description: The ARN of the example state machine
       Value:
         Ref: CloudinaryStorageMigration
+    DynamoDBTableArn:
+      Value:
+        'Fn::GetAtt': [MetaDataTable, Arn]
