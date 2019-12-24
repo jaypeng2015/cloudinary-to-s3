@@ -26,15 +26,15 @@ const fetchList = async (nextCursor: string | null): Promise<FetchResult> => {
   const {
     data: { resources, next_cursor: newNextCursor },
   } = await axios.get(url, { params });
-  const urls = _.map(resources, 'secure_url');
+  const images = _.map(resources, resource => _.pick(resource, ['secure_url', 'created_at']));
   await sqs
     .sendMessage({
-      MessageBody: JSON.stringify(urls),
+      MessageBody: JSON.stringify(images),
       QueueUrl: process.env.QUEUE || '',
     })
     .promise();
   return {
-    moved: _.size(urls),
+    moved: _.size(images),
     nextCursor: newNextCursor || null,
   };
 };
