@@ -29,3 +29,7 @@ Update the required environment variables and then run `npx sls deploy`.
 Go to AWS console, choose `Step Functions` to find the state machine and simply start an execution.
 
 Watch the state machine running or AFK until the job is done.
+
+### After the process
+
+Don’t forget to check the Dead Letter Queue to see if there is any failure caused by unexpected errors.
