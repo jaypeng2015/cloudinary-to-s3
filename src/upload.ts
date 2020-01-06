@@ -17,7 +17,7 @@ interface Image {
 interface MetaData {
   error?: Error;
   item: any;
-  succeeded: Boolean;
+  succeeded: boolean;
 }
 
 const getImage = async (url: string): Promise<Image> => {
@@ -48,7 +48,7 @@ const handler = async ({ Records: [record] }) => {
   console.log(`Handling ${_.size(images)} images`);
 
   const promises = _.map(images, async ({ created_at, secure_url }) => {
-    let item = {
+    const item = {
       cloudinary_url: secure_url,
       created_at,
     };

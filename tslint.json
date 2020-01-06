@@ -3,6 +3,7 @@
   "rules": {
     "interface-name": [true, "never-prefix"],
     "no-console": false,
+    "no-string-literal": false,
     "ordered-imports": false
   }
 }
