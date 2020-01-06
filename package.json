@@ -18,7 +18,7 @@
   "homepage": "https://github.com/jaypeng2015/cloudinary-to-s3#readme",
   "devDependencies": {
     "@commitlint/cli": "8.2.0",
-    "@commitlint/config-conventional": "8.2.0",
+    "@commitlint/config-conventional": "8.3.4",
     "@types/aws-lambda": "8.10.39",
     "@types/jest": "24.0.24",
     "@types/lodash": "4.14.149",
