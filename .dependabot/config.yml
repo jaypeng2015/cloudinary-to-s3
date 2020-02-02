@@ -10,8 +10,5 @@ update_configs:
         dependency_type: "development"
         update_type:
           - "security:patch"
-            SemVer patch update that fixes a known security vulnerability
           - "semver:patch"
-            SemVer patch update, e.g. > 1.x && 1.0.1 to 1.0.3
           - "semver:minor"
-            SemVer minor update, e.g. > 1.x && 2.1.4 to 2.3.1
