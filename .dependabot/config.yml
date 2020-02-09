@@ -7,8 +7,5 @@ update_configs:
     update_schedule: "weekly"
     automerged_updates:
       - match:
-        dependency_type: "development"
-        update_type:
-          - "security:patch"
-          - "semver:patch"
-          - "semver:minor"
+          dependency_type: "development"
+          update_type: "semver:minor"
