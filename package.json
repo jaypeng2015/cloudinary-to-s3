@@ -26,7 +26,7 @@
     "husky": "4.2.3",
     "jest": "25.1.0",
     "lint-staged": "10.0.7",
-    "serverless": "1.63.0",
+    "serverless": "1.64.0",
     "serverless-dotenv-plugin": "2.3.2",
     "serverless-pseudo-parameters": "2.5.0",
     "serverless-step-functions": "2.17.1",
